@@ -66,6 +66,7 @@ export function CampaignCreationForm() {
   const [generationStep, setGenerationStep] = useState(0)
   const [completedSteps, setCompletedSteps] = useState<number[]>([])
   const [isLaunching, setIsLaunching] = useState(false)
+  const [selectedFeatures, setSelectedFeatures] = useState<string[]>([])
 
   const handleInputChange = (field: keyof CampaignData, value: string | boolean) => {
     setCampaignData((prev) => ({ ...prev, [field]: value }))
@@ -281,15 +282,37 @@ export function CampaignCreationForm() {
             <div className="bg-muted p-4 rounded-lg">
               <h4 className="font-medium mb-2 flex items-center gap-2">
                 <MessageSquare className="h-4 w-4" />
-                AI Features Included:
+                AI Features
               </h4>
+              <p className="text-sm text-muted-foreground mb-2">Select features to enable for this campaign</p>
               <div className="flex flex-wrap gap-2">
-                <Badge variant="secondary">Personalization</Badge>
-                <Badge variant="secondary">A/B Testing</Badge>
-                <Badge variant="secondary">Optimal Timing</Badge>
-                <Badge variant="secondary">Emoji Integration</Badge>
-                <Badge variant="secondary">Call-to-Action</Badge>
+                {[
+                  "Personalization",
+                  "A/B Testing",
+                  "Optimal Timing",
+                  "Emoji Integration",
+                  "Call-to-Action",
+                ].map((feature) => {
+                  const selected = selectedFeatures.includes(feature)
+                  return (
+                    <Badge
+                      key={feature}
+                      variant={selected ? "default" : "secondary"}
+                      className={`cursor-pointer select-none ${selected ? "ring-2 ring-primary" : ""}`}
+                      onClick={() =>
+                        setSelectedFeatures((prev) => (prev.includes(feature) ? prev.filter((f) => f !== feature) : [...prev, feature]))
+                      }
+                      role="button"
+                      aria-pressed={selected}
+                    >
+                      {feature}
+                    </Badge>
+                  )
+                })}
               </div>
+              {selectedFeatures.length > 0 && (
+                <p className="text-xs text-muted-foreground mt-2">Selected: {selectedFeatures.join(", ")}</p>
+              )}
             </div>
           </CardContent>
         </Card>

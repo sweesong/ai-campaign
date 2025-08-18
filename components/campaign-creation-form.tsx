@@ -64,6 +64,7 @@ export function CampaignCreationForm() {
   const totalSteps = 6 // Updated total steps to include scheduling
   const [isGenerating, setIsGenerating] = useState(false)
   const [generationStep, setGenerationStep] = useState(0)
+  const [completedSteps, setCompletedSteps] = useState<number[]>([])
   const [isLaunching, setIsLaunching] = useState(false)
 
   const handleInputChange = (field: keyof CampaignData, value: string | boolean) => {
@@ -80,15 +81,22 @@ export function CampaignCreationForm() {
 
   const handleAIGeneration = () => {
     setIsGenerating(true)
+    setCompletedSteps([])
     setGenerationStep(1)
 
     setTimeout(() => {
+      // first step complete
+      setCompletedSteps((prev) => [...prev, 1])
       setGenerationStep(2)
 
       setTimeout(() => {
+        // second step complete
+        setCompletedSteps((prev) => [...prev, 2])
         setGenerationStep(3)
 
         setTimeout(() => {
+          // third step complete
+          setCompletedSteps((prev) => [...prev, 3])
           setIsGenerating(false)
           setGenerationStep(0)
           setCurrentStep(currentStep + 1)
@@ -121,6 +129,25 @@ export function CampaignCreationForm() {
       "all-vip": 3750,
     }
     return baseReach[campaignData.vipSegment as keyof typeof baseReach] || 0
+  }
+
+  const renderStepBadge = (step: number) => {
+    if (isGenerating && generationStep === step) {
+      return (
+        <Badge variant="secondary" className="flex items-center gap-1">
+          <Loader2 className="h-3 w-3 animate-spin" />
+          Processing
+        </Badge>
+      )
+    }
+
+    // if this step has completed, show Ready
+    if (completedSteps.includes(step)) {
+      return <Badge variant="secondary">Ready</Badge>
+    }
+
+    // default state before any generation
+    return <Badge variant="default">Ready to Run</Badge>
   }
 
   return (
@@ -315,42 +342,15 @@ export function CampaignCreationForm() {
               <div className="space-y-3">
                 <div className="flex items-center justify-between p-3 bg-muted rounded-md">
                   <span className="text-sm">Analyzing customer data...</span>
-                  {isGenerating && generationStep === 1 ? (
-                    <Badge variant="secondary" className="flex items-center gap-1">
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                      Processing
-                    </Badge>
-                  ) : generationStep > 1 || !isGenerating ? (
-                    <Badge variant="default">Complete</Badge>
-                  ) : (
-                    <Badge variant="secondary">Ready</Badge>
-                  )}
+                  {renderStepBadge(1)}
                 </div>
                 <div className="flex items-center justify-between p-3 bg-muted rounded-md">
                   <span className="text-sm">Generating personalized messages...</span>
-                  {isGenerating && generationStep === 2 ? (
-                    <Badge variant="secondary" className="flex items-center gap-1">
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                      Processing
-                    </Badge>
-                  ) : generationStep > 2 || !isGenerating ? (
-                    <Badge variant="default">Complete</Badge>
-                  ) : (
-                    <Badge variant="secondary">Ready</Badge>
-                  )}
+                  {renderStepBadge(2)}
                 </div>
                 <div className="flex items-center justify-between p-3 bg-muted rounded-md">
                   <span className="text-sm">Optimizing for engagement...</span>
-                  {isGenerating && generationStep === 3 ? (
-                    <Badge variant="secondary" className="flex items-center gap-1">
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                      Processing
-                    </Badge>
-                  ) : generationStep > 3 || !isGenerating ? (
-                    <Badge variant="default">Complete</Badge>
-                  ) : (
-                    <Badge variant="secondary">Ready</Badge>
-                  )}
+                  {renderStepBadge(3)}
                 </div>
               </div>
             </div>

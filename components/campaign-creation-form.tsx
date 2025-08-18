@@ -25,7 +25,7 @@ import {
 import { Zap, MessageSquare, Target, Loader2, Calendar, Clock, Eye, Send, Users, CheckCircle } from "lucide-react"
 import { CustomerReviewStep } from "./customer-review-step"
 
-interface CampaignData {
+export interface CampaignData {
   name: string
   targetAudience: string
   campaignType: string
@@ -129,9 +129,8 @@ export function CampaignCreationForm() {
         {[1, 2, 3, 4, 5, 6].map((step) => (
           <div key={step} className="flex items-center">
             <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                step <= currentStep ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-              }`}
+              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${step <= currentStep ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                }`}
             >
               {step}
             </div>

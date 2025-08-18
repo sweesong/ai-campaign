@@ -1,5 +1,6 @@
 "use client"
 
+import { CampaignData } from "./campaign-creation-form"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -46,7 +47,6 @@ const mockCustomers: Customer[] = [
     phone: "+1 (555) 345-6789",
     vipTier: "Platinum",
     lastPurchase: "Jewelry set - $680",
-    lastPurchase: "Jewelry set - $680",
     generatedSMS:
       "Emma! ✨ Platinum exclusive: 35% off fine jewelry. New arrivals from your favorite designers. Don't miss out: mall.com/jewelry",
   },
@@ -62,13 +62,16 @@ const mockCustomers: Customer[] = [
 ]
 
 interface CustomerReviewStepProps {
-  campaignData: any
+  campaignData: CampaignData
 }
+
 
 export function CustomerReviewStep({ campaignData }: CustomerReviewStepProps) {
   const [customers, setCustomers] = useState<Customer[]>(mockCustomers)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editedMessage, setEditedMessage] = useState("")
+
+  console.log("campaignData", campaignData)
 
   const handleEdit = (customer: Customer) => {
     setEditingId(customer.id)

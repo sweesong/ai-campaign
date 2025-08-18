@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -63,10 +63,16 @@ export function CampaignCreationForm() {
   const [currentStep, setCurrentStep] = useState(1)
   const totalSteps = 6 // Updated total steps to include scheduling
   const [isGenerating, setIsGenerating] = useState(false)
-  const [generationStep, setGenerationStep] = useState(0)
-  const [completedSteps, setCompletedSteps] = useState<number[]>([])
+  // per-step statuses: 'ready' (Ready To Run), 'processing', 'done' (Ready)
+  const [genStatuses, setGenStatuses] = useState<Array<'ready' | 'processing' | 'done'>>(['ready', 'ready', 'ready'])
   const [isLaunching, setIsLaunching] = useState(false)
-  const [selectedFeatures, setSelectedFeatures] = useState<string[]>([])
+
+  // Reset preview statuses whenever user navigates to the AI generation step
+  useEffect(() => {
+    if (currentStep === 3 && !isGenerating) {
+      setGenStatuses(['ready', 'ready', 'ready'])
+    }
+  }, [currentStep, isGenerating])
 
   const handleInputChange = (field: keyof CampaignData, value: string | boolean) => {
     setCampaignData((prev) => ({ ...prev, [field]: value }))
@@ -76,39 +82,33 @@ export function CampaignCreationForm() {
     if (currentStep === 3) {
       handleAIGeneration()
     } else if (currentStep < totalSteps) {
-      setCurrentStep(currentStep + 1)
+      setCurrentStep((s) => s + 1)
     }
   }
 
-  const handleAIGeneration = () => {
+  const handleAIGeneration = async () => {
     setIsGenerating(true)
-    setCompletedSteps([])
-    setGenerationStep(1)
+    // start: first step processing
+    setGenStatuses(['processing', 'ready', 'ready'])
 
-    setTimeout(() => {
-      // first step complete
-      setCompletedSteps((prev) => [...prev, 1])
-      setGenerationStep(2)
+    await new Promise((res) => setTimeout(res, 800))
+    // first done, second processing
+    setGenStatuses(['done', 'processing', 'ready'])
 
-      setTimeout(() => {
-        // second step complete
-        setCompletedSteps((prev) => [...prev, 2])
-        setGenerationStep(3)
+    await new Promise((res) => setTimeout(res, 1200))
+    // second done, third processing
+    setGenStatuses(['done', 'done', 'processing'])
 
-        setTimeout(() => {
-          // third step complete
-          setCompletedSteps((prev) => [...prev, 3])
-          setIsGenerating(false)
-          setGenerationStep(0)
-          setCurrentStep(currentStep + 1)
-        }, 1000)
-      }, 1500)
-    }, 1500)
+    await new Promise((res) => setTimeout(res, 400))
+    // all done
+    setGenStatuses(['done', 'done', 'done'])
+    setIsGenerating(false)
+    setCurrentStep((s) => s + 1)
   }
 
   const prevStep = () => {
     if (currentStep > 1) {
-      setCurrentStep(currentStep - 1)
+      setCurrentStep((s) => s - 1)
     }
   }
 
@@ -130,25 +130,6 @@ export function CampaignCreationForm() {
       "all-vip": 3750,
     }
     return baseReach[campaignData.vipSegment as keyof typeof baseReach] || 0
-  }
-
-  const renderStepBadge = (step: number) => {
-    if (isGenerating && generationStep === step) {
-      return (
-        <Badge variant="secondary" className="flex items-center gap-1">
-          <Loader2 className="h-3 w-3 animate-spin" />
-          Processing
-        </Badge>
-      )
-    }
-
-    // if this step has completed, show Ready
-    if (completedSteps.includes(step)) {
-      return <Badge variant="secondary">Ready</Badge>
-    }
-
-    // default state before any generation
-    return <Badge variant="default">Ready to Run</Badge>
   }
 
   return (
@@ -282,37 +263,15 @@ export function CampaignCreationForm() {
             <div className="bg-muted p-4 rounded-lg">
               <h4 className="font-medium mb-2 flex items-center gap-2">
                 <MessageSquare className="h-4 w-4" />
-                AI Features
+                AI Features Included:
               </h4>
-              <p className="text-sm text-muted-foreground mb-2">Select features to enable for this campaign</p>
               <div className="flex flex-wrap gap-2">
-                {[
-                  "Personalization",
-                  "A/B Testing",
-                  "Optimal Timing",
-                  "Emoji Integration",
-                  "Call-to-Action",
-                ].map((feature) => {
-                  const selected = selectedFeatures.includes(feature)
-                  return (
-                    <Badge
-                      key={feature}
-                      variant={selected ? "default" : "secondary"}
-                      className={`cursor-pointer select-none ${selected ? "ring-2 ring-primary" : ""}`}
-                      onClick={() =>
-                        setSelectedFeatures((prev) => (prev.includes(feature) ? prev.filter((f) => f !== feature) : [...prev, feature]))
-                      }
-                      role="button"
-                      aria-pressed={selected}
-                    >
-                      {feature}
-                    </Badge>
-                  )
-                })}
+                <Badge variant="secondary">Personalization</Badge>
+                <Badge variant="secondary">A/B Testing</Badge>
+                <Badge variant="secondary">Optimal Timing</Badge>
+                <Badge variant="secondary">Emoji Integration</Badge>
+                <Badge variant="secondary">Call-to-Action</Badge>
               </div>
-              {selectedFeatures.length > 0 && (
-                <p className="text-xs text-muted-foreground mt-2">Selected: {selectedFeatures.join(", ")}</p>
-              )}
             </div>
           </CardContent>
         </Card>
@@ -363,18 +322,28 @@ export function CampaignCreationForm() {
                 AI Generation Preview
               </h4>
               <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-muted rounded-md">
-                  <span className="text-sm">Analyzing customer data...</span>
-                  {renderStepBadge(1)}
-                </div>
-                <div className="flex items-center justify-between p-3 bg-muted rounded-md">
-                  <span className="text-sm">Generating personalized messages...</span>
-                  {renderStepBadge(2)}
-                </div>
-                <div className="flex items-center justify-between p-3 bg-muted rounded-md">
-                  <span className="text-sm">Optimizing for engagement...</span>
-                  {renderStepBadge(3)}
-                </div>
+                {[
+                  "Analyzing customer data...",
+                  "Generating personalized messages...",
+                  "Optimizing for engagement...",
+                ].map((label, idx) => {
+                  const status = genStatuses[idx]
+                  return (
+                    <div key={label} className="flex items-center justify-between p-3 bg-muted rounded-md">
+                      <span className="text-sm">{label}</span>
+                      {status === "processing" ? (
+                        <Badge variant="secondary" className="flex items-center gap-1">
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                          Processing
+                        </Badge>
+                      ) : status === "done" ? (
+                        <Badge variant="default">Ready</Badge>
+                      ) : (
+                        <Badge variant="secondary">Ready To Run</Badge>
+                      )}
+                    </div>
+                  )
+                })}
               </div>
             </div>
           </CardContent>
